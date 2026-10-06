@@ -12,25 +12,13 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    // public function __invoke(Request $request): View
-    // {
-    //     $user = Auth::user();
-
-    //     return match ($user->role) {
-    //         'guru' => $this->guruDashboard($user),
-    //         'pengawas' => $this->pengawasDashboard($user),
-    //         'admin', 'kemenag' => $this->adminDashboard(),
-    //         default => abort(403, 'Role pengguna tidak terdefinisi.'),
-    //     };
-    // }
-
-    public function guruDashboard(): View
+    public function pegawaiDashboard(): View
     {
-        $guru = Auth::user();
+        $pegawai = Auth::user();
         $tahunPerkin = \App\Models\TahunAnggaran::approved()->latest('tahun')->first();
 
-        return view('pages.dashboard.guru-self-service', [
-            'guru' => $guru,
+        return view('pages.dashboard.pegawai-self-service', [
+            'pegawai' => $pegawai,
             'tahunPerkin' => $tahunPerkin,
             'indikatorCount' => 4,
             'anggaranDikelola' => 124500000,
@@ -63,7 +51,7 @@ class DashboardController extends Controller
                     'updated' => '08 Sep 2026',
                 ],
                 [
-                    'indicator' => 'Kolaborasi pengembangan kompetensi guru',
+                    'indicator' => 'Kolaborasi pengembangan kompetensi pegawai',
                     'target' => '6 forum berbagi praktik baik',
                     'progress' => 44,
                     'evidence' => 'revision',
@@ -109,7 +97,7 @@ class DashboardController extends Controller
         $tahuns = TahunAnggaran::query()->orderByDesc('tahun')->get();
         $tahun = isset($filters['tahun_anggaran_id'])
             ? $tahuns->firstWhere('id', $filters['tahun_anggaran_id'])
-            : $tahuns->first();
+            : TahunAnggaran::approved()->latest('tahun')->first();
         $sekolahs = Sekolah::query()->orderBy('nama_sekolah')->get();
         $sekolahId = $filters['sekolah_id'] ?? null;
 
@@ -125,11 +113,11 @@ class DashboardController extends Controller
                 ])
             : collect();
 
-        $guruQuery = User::query()->where('role', 'guru')->when(
+        $pegawaiQuery = User::query()->where('role', 'pegawai')->when(
             $sekolahId,
             fn ($query) => $query->where('sekolah_id', $sekolahId)
         );
-        $guruCount = (clone $guruQuery)->count();
+        $pegawaiCount = (clone $pegawaiQuery)->count();
 
         $realisasiQuery = RealisasiPerkin::query()
             ->when(
@@ -140,12 +128,12 @@ class DashboardController extends Controller
                 ),
                 fn ($query) => $query->whereRaw('1 = 0')
             )
-            ->whereHas('user', fn ($query) => $query->where('role', 'guru')->when(
+            ->whereHas('user', fn ($query) => $query->where('role', 'pegawai')->when(
                 $sekolahId,
                 fn ($userQuery) => $userQuery->where('sekolah_id', $sekolahId)
             ));
 
-        $submittedGuruCount = (clone $realisasiQuery)->distinct()->count('user_id');
+        $submittedPegawaiCount = (clone $realisasiQuery)->distinct()->count('user_id');
         $evidenceCount = (clone $realisasiQuery)->count();
         $approvedEvidenceCount = (clone $realisasiQuery)->where('status_verifikasi', 'approved')->count();
         $revisionEvidenceCount = (clone $realisasiQuery)->where('status_verifikasi', 'rejected')->count();
@@ -158,21 +146,21 @@ class DashboardController extends Controller
 
         $schoolCompliance = Sekolah::query()
             ->when($sekolahId, fn ($query) => $query->whereKey($sekolahId))
-            ->withCount('guru')
-            ->withCount(['guru as submitted_guru_count' => fn ($query) => $query->when(
+            ->withCount('pegawai')
+            ->withCount(['pegawai as submitted_pegawai_count' => fn ($query) => $query->when(
                 $tahun,
-                fn ($guruQuery) => $guruQuery->whereHas(
+                fn ($pegawaiQuery) => $pegawaiQuery->whereHas(
                     'realisasins.indikator.sasaran',
                     fn ($sasaranQuery) => $sasaranQuery->where('tahun_anggaran_id', $tahun->id)
                 ),
-                fn ($guruQuery) => $guruQuery->whereRaw('1 = 0')
+                fn ($pegawaiQuery) => $pegawaiQuery->whereRaw('1 = 0')
             )])
             ->orderBy('nama_sekolah')
             ->get()
             ->map(fn ($sekolah) => [
                 'school' => $sekolah->nama_sekolah,
-                'value' => $sekolah->guru_count > 0
-                    ? round($sekolah->submitted_guru_count / $sekolah->guru_count * 100)
+                'value' => $sekolah->pegawai_count > 0
+                    ? round($sekolah->submitted_pegawai_count / $sekolah->pegawai_count * 100)
                     : 0,
             ]);
 
@@ -185,9 +173,9 @@ class DashboardController extends Controller
                 'tone' => 'brand',
             ],
             [
-                'label' => 'Progres Submit Perkin Guru',
-                'value' => $submittedGuruCount . ' / ' . $guruCount,
-                'sub' => ($guruCount > 0 ? round($submittedGuruCount / $guruCount * 100) : 0) . '% sudah submit',
+                'label' => 'Progres Submit Perkin Pegawai',
+                'value' => $submittedPegawaiCount . ' / ' . $pegawaiCount,
+                'sub' => ($pegawaiCount > 0 ? round($submittedPegawaiCount / $pegawaiCount * 100) : 0) . '% sudah submit',
                 'icon' => 'users',
                 'tone' => 'success',
             ],

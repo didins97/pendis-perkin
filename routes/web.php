@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MasterAnggaranController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CetakPerkinController;
-use App\Http\Controllers\GuruController;
+use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\ApprovalMasterController;
 use App\Http\Controllers\MasterKinerjaController;
 use App\Http\Controllers\PimpinanController;
@@ -19,7 +19,7 @@ Route::get('/', function () {
         ? redirect()->to(match (Auth::user()->role) {
             'admin' => route('admin.dashboard'),
             'pimpinan' => route('pimpinan.dashboard'),
-            default => route('guru.dashboard'),
+            default => route('pegawai.dashboard'),
         })
         : redirect()->route('signin');
 })->name('dashboard');
@@ -29,15 +29,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/perkin/{id}/preview', [CetakPerkinController::class, 'preview'])->name('perkin.preview');
     Route::get('/perkin/{id}/cetak-pdf', [CetakPerkinController::class, 'cetakPdf'])->name('perkin.cetak-pdf');
 
-    Route::middleware('role:guru')->group(function () {
-        // Route::view('/guru/dashboard', 'pages.dashboard.ecommerce', ['title' => 'Dashboard Guru'])->name('guru.dashboard');
-        Route::get('/guru/dashboard', [DashboardController::class, 'guruDashboard'])->name('guru.dashboard');
-        Route::controller(RealisasiPerkinController::class)->prefix('/guru/realisasi')->group(function () {
-            Route::get('/', 'guruIndex')->name('guru.realisasi.index');
-            Route::get('/create', 'guruCreate')->name('guru.realisasi.create');
-            Route::get('/sasaran/{sasaran}/indikator', 'indikatorBySasaran')->name('guru.realisasi.indikator-by-sasaran');
-            Route::post('/', 'store')->name('guru.realisasi.store');
+    Route::middleware('role:pegawai')->group(function () {
+        Route::get('/pegawai/dashboard', [DashboardController::class, 'pegawaiDashboard'])->name('pegawai.dashboard');
+        Route::controller(RealisasiPerkinController::class)->prefix('/pegawai/realisasi')->name('pegawai.realisasi.')->group(function () {
+            Route::get('/', 'pegawaiIndex')->name('index');
+            Route::get('/create', 'pegawaiCreate')->name('create');
+            Route::get('/sasaran/{sasaran}/indikator', 'indikatorBySasaran')->name('indikator-by-sasaran');
+            Route::post('/', 'store')->name('store');
         });
+        Route::redirect('/guru/dashboard', '/pegawai/dashboard');
+        Route::redirect('/guru/realisasi', '/pegawai/realisasi');
+        Route::redirect('/guru/realisasi/create', '/pegawai/realisasi/create');
     });
 
     Route::middleware('role:pimpinan')->group(function () {
@@ -99,14 +101,18 @@ Route::middleware('auth')->group(function () {
             Route::put('/{pimpinan}', 'update')->name('admin.pimpinan.update');
             Route::post('/{pimpinan}/reset-password', 'resetPassword')->name('admin.pimpinan.reset-password');
         });
-        Route::controller(GuruController::class)->prefix('/admin/master-data/guru')->group(function () {
-            Route::get('/', 'index')->name('admin.teachers');
-            Route::post('/', 'store')->name('admin.teachers.store');
-            Route::post('/import', 'import')->name('admin.teachers.import');
-            Route::put('/{guru}', 'update')->name('admin.teachers.update');
-            Route::get('/{guru}/riwayat', 'history')->name('admin.teachers.history');
-            Route::delete('/{guru}', 'destroy')->name('admin.teachers.destroy');
+        Route::controller(PegawaiController::class)->prefix('/admin/master-data/pegawai')->name('admin.pegawai.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::post('/import', 'import')->name('import');
+            Route::get('/{pegawai}/edit', 'edit')->name('edit');
+            Route::get('/{pegawai}/riwayat', 'history')->name('history');
+            Route::get('/{pegawai}/berkas/{document}', 'document')->name('document');
+            Route::get('/{pegawai}', 'show')->name('show');
+            Route::put('/{pegawai}', 'update')->name('update');
+            Route::delete('/{pegawai}', 'destroy')->name('destroy');
         });
+        Route::redirect('/admin/master-data/guru', '/admin/master-data/pegawai')->name('admin.teachers');
     });
 });
 
@@ -116,9 +122,10 @@ Route::get('/calendar', function () {
 })->name('calendar');
 
 // profile pages
-Route::get('/profile', function () {
-    return view('pages.profile', ['title' => 'Profile']);
-})->name('profile');
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+});
 
 // form pages
 Route::get('/form-elements', function () {
@@ -157,7 +164,7 @@ Route::get('/signin', function () {
         ? redirect()->to(match (Auth::user()->role) {
             'admin' => route('admin.dashboard'),
             'pimpinan' => route('pimpinan.dashboard'),
-            default => route('guru.dashboard'),
+            default => route('pegawai.dashboard'),
         })
         : view('pages.auth.signin', ['title' => 'MODIS PENDIS - Masuk']);
 })->name('signin');

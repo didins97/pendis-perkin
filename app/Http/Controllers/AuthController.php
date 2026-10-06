@@ -8,7 +8,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class AuthController extends Controller
 {
@@ -86,7 +88,7 @@ class AuthController extends Controller
         'email' => $email,
         'nip' => $nip,
         'sekolah_id' => $data['sekolah_id'], // Simpan sekolah_id
-        'role' => 'guru',
+        'role' => 'pegawai',
         'password' => $data['password'],
     ]);
 
@@ -95,6 +97,39 @@ class AuthController extends Controller
 
     return redirect()->to($this->dashboardRoute($user))->with('status', 'Akun MODIS PENDIS berhasil dibuat.');
 }
+
+    public function profile(): View
+    {
+        $user = Auth::user();
+
+        abort_unless($user, 403);
+
+        return view('pages.profile', [
+            'title' => 'Profile',
+            'user' => $user->load('sekolah'),
+        ]);
+    }
+
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        abort_unless($user, 403);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'nip' => ['nullable', 'string', 'max:50', Rule::unique('users')->ignore($user->id)],
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'nip' => $validated['nip'] ?? $user->nip,
+        ]);
+
+        return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui.');
+    }
 
     public function logout(Request $request): RedirectResponse
     {
@@ -110,7 +145,7 @@ class AuthController extends Controller
         return match ($user->role) {
             'admin' => route('admin.dashboard'),
             'pimpinan' => route('pimpinan.dashboard'),
-            default => route('guru.dashboard'),
+            default => route('pegawai.dashboard'),
         };
     }
 

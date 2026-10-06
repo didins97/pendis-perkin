@@ -26,7 +26,7 @@ class RealisasiPerkin extends Model
         'verified_at' => 'datetime',
     ];
 
-    // Relasi ke Guru yang upload
+    // Relasi ke pegawai yang mengunggah eviden.
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

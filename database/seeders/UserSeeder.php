@@ -25,8 +25,8 @@ class UserSeeder extends Seeder
 
         // 2. Akun Admin Kemenag
         User::create([
-            'name'              => 'Seksi Pendis Morotai',
-            'email'             => 'pendis@app.com',
+            'name'              => 'sadly jusuf',
+            'email'             => 'saldypendis@app.com',
             'email_verified_at' => now(),
             'password'          => $defaultPassword,
             'role'              => 'admin',
@@ -37,25 +37,13 @@ class UserSeeder extends Seeder
 
         // 3. Akun Pimpinan Pembina
         User::create([
-            'name'              => 'Arifin Bone',
-            'email'             => 'arifinbone@app.com',
+            'name'              => 'Kepala Seksi Pendis',
+            'email'             => 'seksipendis@app.com',
             'email_verified_at' => now(),
             'password'          => $defaultPassword,
             'role'              => 'pimpinan',
             'nip'               => '196806041997031003',
             'sekolah_id'        => null, // Pimpinan membina via tabel sekolahs
-            'remember_token'    => Str::random(10),
-        ]);
-
-        // 4. Akun Guru (Terhubung ke Sekolah)
-        User::create([
-            'name'              => 'User Guru, S.Pd',
-            'email'             => 'guru@sekolah.sch.id',
-            'email_verified_at' => now(),
-            'password'          => $defaultPassword,
-            'role'              => 'guru',
-            'nip'               => '199008202019031005',
-            'sekolah_id'        => $sekolahId,
             'remember_token'    => Str::random(10),
         ]);
     }

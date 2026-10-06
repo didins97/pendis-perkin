@@ -14,7 +14,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">Guru</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">Pegawai</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">Sekolah</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">Indikator</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">Capaian</th>

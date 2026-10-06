@@ -10,7 +10,7 @@
     @endif
 
     <div class="mb-4 flex justify-end">
-        <a href="{{ route('guru.realisasi.create') }}" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">
+        <a href="{{ route('pegawai.realisasi.create') }}" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">
             + Input Eviden Baru
         </a>
     </div>

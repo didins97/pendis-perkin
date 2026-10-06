@@ -16,7 +16,7 @@
                         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Tahun Anggaran {{ $tahun->tahun }}</h1>
                         <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $tahun->status_approval === 'submitted' ? 'bg-warning-50 text-warning-700' : ($tahun->status_approval === 'approved' ? 'bg-success-50 text-success-700' : 'bg-error-50 text-error-700') }}">{{ $tahun->status_approval === 'submitted' ? 'Menunggu Review' : ucfirst($tahun->status_approval) }}</span>
                     </div>
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Review struktur Master Perkin dan Pagu sebelum Guru dapat memilih indikator.</p>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Review struktur Master Perkin dan Pagu sebelum Pegawai dapat memilih indikator.</p>
                 </div>
                 @if ($tahun->status_approval === 'submitted')
                     <div class="flex flex-wrap gap-3">
@@ -74,7 +74,7 @@
         <div x-show="approveOpen" @keydown.escape.window="approveOpen = false" class="fixed inset-0 z-99999 flex items-center justify-center bg-gray-900/50 p-4" x-transition>
             <div @click.outside="approveOpen = false" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Setujui Master Perkin?</h2>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Guru akan dapat memilih sasaran dan indikator dari Tahun Anggaran {{ $tahun->tahun }}.</p>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Pegawai akan dapat memilih sasaran dan indikator dari Tahun Anggaran {{ $tahun->tahun }}.</p>
                 <form method="POST" action="{{ route('pimpinan.approval-master.approve', $tahun) }}" class="mt-6 flex justify-end gap-3">@csrf @method('PUT')<button type="button" @click="approveOpen = false" class="rounded-lg border px-4 py-2 text-sm">Batal</button><button type="submit" class="rounded-lg bg-success-600 px-4 py-2 text-sm font-semibold text-white">Ya, Setujui</button></form>
             </div>
         </div>

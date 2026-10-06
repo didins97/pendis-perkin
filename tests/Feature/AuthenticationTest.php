@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\Sekolah;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 
@@ -30,13 +31,31 @@ test('user can log in with NIP', function () {
         'email' => 'guru@example.test',
         'nip' => '199001012020011001',
         'password' => Hash::make('password'),
-        'role' => 'guru',
+        'role' => 'pegawai',
     ]);
 
     $this->post(route('login'), [
         'email' => '199001012020011001',
         'password' => 'password',
-    ])->assertRedirect(route('guru.dashboard'));
+    ])->assertRedirect(route('pegawai.dashboard'));
+});
+
+test('new accounts are stored with the pegawai role', function () {
+    $sekolah = Sekolah::create([
+        'npsn' => '98765432',
+        'nama_sekolah' => 'Sekolah Pegawai Test',
+    ]);
+
+    $this->post(route('register'), [
+        'name' => 'Pegawai Test',
+        'email' => 'pegawai@example.test',
+        'sekolah_id' => $sekolah->id,
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'terms' => 'on',
+    ])->assertRedirect(route('pegawai.dashboard'));
+
+    expect(User::query()->where('email', 'pegawai@example.test')->value('role'))->toBe('pegawai');
 });
 
 test('authenticated user cannot open the sign in page', function () {
@@ -46,7 +65,7 @@ test('authenticated user cannot open the sign in page', function () {
 });
 
 test('authenticated user can log out', function () {
-    $user = User::factory()->create(['role' => 'guru']);
+    $user = User::factory()->create(['role' => 'pegawai']);
 
     $this->actingAs($user)
         ->post(route('logout'))

@@ -9,7 +9,7 @@ class MenuHelper
 {
     public static function getMainNavItems()
     {
-        $role = Auth::user()?->role ?? 'guru';
+        $role = Auth::user()?->role ?? 'pegawai';
         $tahunPerkin = TahunAnggaran::approved()->latest('tahun')->first();
 
         return match ($role) {
@@ -26,12 +26,12 @@ class MenuHelper
                     'name' => 'Master Data Kinerja',
                     'path' => '/admin/master-data/kinerja',
                 ],
-                ['icon' => 'task', 'name' => 'Realisasi & Verifikasi Eviden Guru', 'path' => '/admin/realisasi'],
+                ['icon' => 'task', 'name' => 'Realisasi & Verifikasi Eviden Pegawai', 'path' => '/admin/realisasi'],
                 [
                     'icon' => 'user-profile',
                     'name' => 'Data Master',
                     'subItems' => [
-                        ['name' => 'Data Guru', 'path' => '/admin/master-data/guru'],
+                        ['name' => 'Data Pegawai', 'path' => '/admin/master-data/pegawai'],
                         ['name' => 'Data Sekolah', 'path' => '/admin/master-data/sekolah'],
                         ['name' => 'Data Pimpinan', 'path' => '/admin/master-data/pimpinan'],
                     ],
@@ -39,9 +39,9 @@ class MenuHelper
                 ['icon' => 'pages', 'name' => 'Laporan & Cetak Perkin', 'path' => '/admin/laporan-perkin'],
             ],
             default => [
-                ['icon' => 'dashboard', 'name' => 'Dashboard Guru', 'path' => '/guru/dashboard'],
-                ['icon' => 'forms', 'name' => 'Upload / Input Eviden', 'path' => '/guru/realisasi/create'],
-                ['icon' => 'charts', 'name' => 'Riwayat Realisasi Saya', 'path' => '/guru/realisasi'],
+                ['icon' => 'dashboard', 'name' => 'Dashboard Pegawai', 'path' => '/pegawai/dashboard'],
+                ['icon' => 'forms', 'name' => 'Upload / Input Eviden', 'path' => '/pegawai/realisasi/create'],
+                ['icon' => 'charts', 'name' => 'Riwayat Realisasi Saya', 'path' => '/pegawai/realisasi'],
                 ['icon' => 'pages', 'name' => 'Lihat Perkin Resmi', 'path' => $tahunPerkin ? route('perkin.preview', $tahunPerkin) : '/perkin'],
             ],
         };
@@ -83,14 +83,14 @@ class MenuHelper
 
     public static function getMenuGroups()
     {
-        $role = Auth::user()?->role ?? 'guru';
+        $role = Auth::user()?->role ?? 'pegawai';
 
         return [
             [
                 'title' => match ($role) {
                     'pimpinan' => 'Menu Pimpinan',
                     'admin' => 'Menu Admin / Perencana',
-                    default => 'Menu Guru / Pegawai',
+                    default => 'Menu Pegawai',
                 },
                 'items' => self::getMainNavItems()
             ],

@@ -35,7 +35,7 @@
                             <th class="whitespace-nowrap px-5 py-4 text-xs font-medium uppercase text-gray-500">NPSN</th>
                             <th class="min-w-56 px-5 py-4 text-xs font-medium uppercase text-gray-500">Nama Sekolah</th>
                             <th class="min-w-64 px-5 py-4 text-xs font-medium uppercase text-gray-500">Alamat</th>
-                            <th class="whitespace-nowrap px-5 py-4 text-xs font-medium uppercase text-gray-500">Jumlah Guru</th>
+                            <th class="whitespace-nowrap px-5 py-4 text-xs font-medium uppercase text-gray-500">Jumlah Pegawai</th>
                             <th class="whitespace-nowrap px-5 py-4 text-right text-xs font-medium uppercase text-gray-500">Aksi</th>
                         </tr>
                     </thead>
@@ -45,7 +45,7 @@
                                 <td class="whitespace-nowrap px-5 py-4 text-sm font-medium text-gray-800 dark:text-white/90">{{ $school->npsn }}</td>
                                 <td class="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white/90">{{ $school->nama_sekolah }}</td>
                                 <td class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $school->alamat ?: 'Belum diisi' }}</td>
-                                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ $school->guru_count }}</td>
+                                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ $school->pegawai_count }}</td>
                                 <td class="px-5 py-4">
                                     <div class="flex justify-end gap-2">
                                         <button type="button" title="Edit sekolah" aria-label="Edit sekolah" @click='openEdit(@js(['id' => $school->id, 'npsn' => $school->npsn, 'nama_sekolah' => $school->nama_sekolah, 'alamat' => $school->alamat]))' class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-500/10">

@@ -13,7 +13,7 @@ class SekolahController extends Controller
     public function index(Request $request): View
     {
         $schools = Sekolah::query()
-            ->withCount('guru')
+            ->withCount('pegawai')
             ->when($request->input('search'), function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('npsn', 'like', "%{$search}%")

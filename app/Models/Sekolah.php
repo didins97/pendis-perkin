@@ -9,8 +9,8 @@ class Sekolah extends Model
 {
     protected $fillable = ['npsn', 'nama_sekolah', 'alamat'];
 
-    public function guru(): HasMany
+    public function pegawai(): HasMany
     {
-        return $this->hasMany(User::class, 'sekolah_id')->where('role', 'guru');
+        return $this->hasMany(User::class, 'sekolah_id')->where('role', 'pegawai');
     }
 }

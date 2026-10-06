@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-common.page-breadcrumb pageTitle="Riwayat Berkas Guru" />
+    <x-common.page-breadcrumb pageTitle="Riwayat Berkas Pegawai" />
     <div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-800 dark:text-white/90">Riwayat Berkas {{ $teacher->name }}</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $teacher->nip }} ·
-                {{ $teacher->sekolah?->nama_sekolah ?? 'Sekolah belum ditentukan' }}</p>
-        </div><a href="{{ route('admin.teachers') }}"
+            <h1 class="text-2xl font-semibold text-gray-800 dark:text-white/90">Riwayat Berkas {{ $pegawai->name }}</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $pegawai->nip }} ·
+                {{ $pegawai->sekolah?->nama_sekolah ?? 'Sekolah belum ditentukan' }}</p>
+        </div><a href="{{ route('admin.pegawai.index') }}"
             class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Kembali</a>
     </div>
-    <x-common.component-card title="Riwayat Eviden Perkin" desc="Daftar eviden kinerja yang pernah dikirim guru.">
+    <x-common.component-card title="Riwayat Eviden Perkin" desc="Daftar eviden kinerja yang pernah dikirim pegawai.">
         <div class="w-full overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
             <table class="w-full min-w-[700px] text-left">
                 <thead class="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.02]">

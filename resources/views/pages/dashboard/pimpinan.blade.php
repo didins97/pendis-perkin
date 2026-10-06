@@ -26,12 +26,12 @@
             </div>
         </section>
 
-        <x-common.component-card title="Eviden Terbaru" desc="Realisasi kinerja yang dikirim guru.">
+        <x-common.component-card title="Eviden Terbaru" desc="Realisasi kinerja yang dikirim pegawai.">
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[760px] text-left">
                     <thead class="border-b border-gray-200 dark:border-gray-800">
                         <tr>
-                            <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Guru / Sekolah</th>
+                            <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Pegawai / Sekolah</th>
                             <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Indikator</th>
                             <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Capaian</th>
                             <th class="px-4 py-3 text-xs font-semibold uppercase text-gray-500">Status</th>

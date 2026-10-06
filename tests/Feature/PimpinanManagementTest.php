@@ -56,7 +56,7 @@ test('pimpinan dashboard shows real perkin evidence counts', function () {
         'nama_sekolah' => 'Sekolah Eviden Test',
     ]);
     $guru = User::factory()->create([
-        'role' => 'guru',
+        'role' => 'pegawai',
         'sekolah_id' => $school->id,
     ]);
     $tahun = TahunAnggaran::create([

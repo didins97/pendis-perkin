@@ -25,7 +25,7 @@ class MasterIndikator extends Model
         return $this->belongsTo(SasaranKinerja::class, 'sasaran_id');
     }
 
-    // Relasi ke Eviden Realisasi yang diunggah Guru
+    // Relasi ke eviden realisasi yang diunggah pegawai.
     public function realisasis(): HasMany
     {
         return $this->hasMany(RealisasiPerkin::class, 'master_indikator_id');

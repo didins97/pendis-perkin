@@ -12,9 +12,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('guru and admin evidence realisasi routes exist and render pages', function () {
-    $guru = User::factory()->create([
-        'role' => 'guru',
+test('pegawai and admin evidence realisasi routes exist and render pages', function () {
+    $pegawai = User::factory()->create([
+        'role' => 'pegawai',
         'email' => 'guru.test@example.com',
         'sekolah_id' => null,
     ]);
@@ -25,8 +25,8 @@ test('guru and admin evidence realisasi routes exist and render pages', function
         'sekolah_id' => null,
     ]);
 
-    $this->actingAs($guru)
-        ->get(route('guru.realisasi.index'))
+    $this->actingAs($pegawai)
+        ->get(route('pegawai.realisasi.index'))
         ->assertOk();
 
     $this->actingAs($admin)
@@ -41,7 +41,7 @@ test('admin planning dashboard displays database-backed metrics', function () {
         'nama_sekolah' => 'Sekolah Dashboard Test',
     ]);
     $guru = User::factory()->create([
-        'role' => 'guru',
+        'role' => 'pegawai',
         'sekolah_id' => $school->id,
     ]);
     $tahun = TahunAnggaran::create([

@@ -15,7 +15,7 @@ use Illuminate\View\View;
 
 class RealisasiPerkinController extends Controller
 {
-    public function guruIndex(): View
+    public function pegawaiIndex(): View
     {
         $items = RealisasiPerkin::query()
             ->with(['indikator.sasaran'])
@@ -23,12 +23,12 @@ class RealisasiPerkinController extends Controller
             ->latest()
             ->get();
 
-        return view('pages.guru.realisasi-index', [
+        return view('pages.pegawai.realisasi-index', [
             'items' => $items,
         ]);
     }
 
-    public function guruCreate(): View
+    public function pegawaiCreate(): View
     {
         $tahuns = TahunAnggaran::approved()
             ->with(['sasarans' => fn ($query) => $query->with('indikators')->orderBy('no_urut')])
@@ -41,7 +41,7 @@ class RealisasiPerkinController extends Controller
             ->orderBy('no_urut')
             ->get();
 
-        return view('pages.guru.realisasi-create', [
+        return view('pages.pegawai.realisasi-create', [
             'tahuns' => $tahuns,
             'sasarans' => $sasarans,
         ]);
@@ -90,7 +90,7 @@ class RealisasiPerkinController extends Controller
             'status_verifikasi' => 'pending',
         ]);
 
-        return redirect()->route('guru.realisasi.index')->with('success', 'Eviden realisasi berhasil diunggah.');
+        return redirect()->route('pegawai.realisasi.index')->with('success', 'Eviden realisasi berhasil diunggah.');
     }
 
     public function adminIndex(): View

@@ -2,9 +2,9 @@
 
 @section('content')
     @php
-        $displayName = $guru?->name ?? 'Guru / Pegawai';
-        $identityNumber = $guru?->nip ?? $guru?->email ?? 'NIP belum diatur';
-        $schoolName = $guru?->sekolah?->nama_sekolah ?? 'Satker belum diatur';
+        $displayName = $pegawai?->name ?? 'Pegawai';
+        $identityNumber = $pegawai?->nip ?? $pegawai?->email ?? 'NIP belum diatur';
+        $schoolName = $pegawai?->sekolah?->nama_sekolah ?? 'Satker belum diatur';
         $evidenceLabels = [
             'approved' => ['label' => 'Disetujui', 'class' => 'bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400'],
             'pending' => ['label' => 'Menunggu', 'class' => 'bg-warning-50 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400'],
@@ -12,7 +12,7 @@
         ];
     @endphp
 
-    <div x-data="guruDashboard({{ $progresFisik }})" x-init="initChart()" class="space-y-6">
+    <div class="space-y-6">
         <section class="overflow-hidden rounded-3xl bg-brand-600 p-6 text-white shadow-sm md:p-8">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>

@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Perjanjian Kinerja Tahun {{ $tahun->tahun }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/logo/logopendis-1.png') }}">
     <style>
         @page {
             size: A4 portrait;

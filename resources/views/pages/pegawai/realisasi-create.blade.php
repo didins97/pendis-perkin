@@ -11,7 +11,7 @@
 
     <div class="mx-auto max-w-4xl" x-data="realisasiEvidenData()">
         <x-common.component-card title="Unggah Eviden" desc="Pilih Tahun Anggaran yang sudah disetujui, lalu sasaran dan indikator yang sesuai.">
-            <form method="POST" action="{{ route('guru.realisasi.store') }}" enctype="multipart/form-data" class="space-y-5">
+            <form method="POST" action="{{ route('pegawai.realisasi.store') }}" enctype="multipart/form-data" class="space-y-5">
                 @csrf
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -46,7 +46,7 @@
                 </div>
 
                 <div>
-                    <label for="catatan_guru" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Catatan Guru</label>
+                    <label for="catatan_guru" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Catatan Pegawai</label>
                     <textarea id="catatan_guru" name="catatan_guru" rows="4" class="w-full rounded-lg border border-gray-300 px-4 py-3 dark:border-gray-700 dark:bg-gray-900 dark:text-white">{{ old('catatan_guru') }}</textarea>
                 </div>
 
@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="flex justify-end gap-3">
-                    <a href="{{ route('guru.realisasi.index') }}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Batal</a>
+                    <a href="{{ route('pegawai.realisasi.index') }}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Batal</a>
                     <button type="submit" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600">Simpan Eviden</button>
                 </div>
             </form>
@@ -82,7 +82,7 @@
                     return;
                 }
 
-                fetch(`{{ url('/guru/realisasi/sasaran') }}/${this.sasaranId}/indikator`, {
+                fetch(`{{ url('/pegawai/realisasi/sasaran') }}/${this.sasaranId}/indikator`, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',

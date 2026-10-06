@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('use-approved-master', function (User $user, TahunAnggaran $tahun): bool {
-            return $user->role === 'guru' && $tahun->status_approval === 'approved';
+            return $user->role === 'pegawai' && $tahun->status_approval === 'approved';
         });
     }
 }

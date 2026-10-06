@@ -25,7 +25,7 @@
                     <p class="mt-4 text-lg leading-8 text-white/75">Sistem Informasi Perangkat Belajar untuk proses
                         verifikasi dan pengesahan yang terintegrasi.</p>
                     <div class="mt-10 flex flex-wrap justify-center gap-3 text-sm text-white/80">
-                        <span class="rounded-full border border-white/20 bg-white/10 px-4 py-2">Guru</span>
+                        <span class="rounded-full border border-white/20 bg-white/10 px-4 py-2">Pegawai</span>
                         <span class="rounded-full border border-white/20 bg-white/10 px-4 py-2">Pimpinan</span>
                         <span class="rounded-full border border-white/20 bg-white/10 px-4 py-2">Admin Kemenag</span>
                     </div>
@@ -55,7 +55,7 @@
                     <h1 class="text-title-sm sm:text-title-md font-semibold text-gray-800 dark:text-white/90">Buat akun
                         MODIS PENDIS</h1>
                     <p class="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">Daftarkan identitas Anda untuk
-                        mengakses layanan perangkat belajar guru.</p>
+                        mengakses layanan perangkat belajar pegawai.</p>
                 </div>
 
                 @if (session('status'))
