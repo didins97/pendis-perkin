@@ -16,8 +16,8 @@ class MenuHelper
             'pimpinan' => [
                 ['icon' => 'dashboard', 'name' => 'Executive Dashboard', 'path' => '/pimpinan/dashboard'],
                 ['icon' => 'forms', 'name' => 'Approval Master Perkin & Pagu', 'path' => '/pimpinan/approval-master'],
-                ['icon' => 'tables', 'name' => 'Monitoring Anggaran', 'path' => '/pimpinan/monitoring-anggaran'],
-                ['icon' => 'pages', 'name' => 'Cetak Dokumen Perkin', 'path' => '/pimpinan/cetak-perkin'],
+                ['icon' => 'task', 'name' => 'Realisasi & Verifikasi Eviden Pegawai', 'path' => '/pimpinan/realisasi'],
+                ['icon' => 'pages', 'name' => 'Laporan & Cetak Perkin', 'path' => '/pimpinan/laporan-perkin'],
             ],
             'admin' => [
                 ['icon' => 'dashboard', 'name' => 'Dashboard', 'path' => '/admin/dashboard'],

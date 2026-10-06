@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use App\Models\IndikatorKinerja;
 use App\Models\MasterKegiatan;
 use App\Models\MasterProgram;
@@ -8,6 +7,7 @@ use App\Models\RealisasiPerkin;
 use App\Models\SasaranKinerja;
 use App\Models\Sekolah;
 use App\Models\TahunAnggaran;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -32,6 +32,60 @@ test('pegawai and admin evidence realisasi routes exist and render pages', funct
     $this->actingAs($admin)
         ->get(route('admin.realisasi.index'))
         ->assertOk();
+});
+
+test('pegawai evidence history shows status summaries, revision notes and only own submissions', function () {
+    $pegawai = User::factory()->create(['role' => 'pegawai']);
+    $pegawaiLain = User::factory()->create(['role' => 'pegawai']);
+    $tahun = TahunAnggaran::create([
+        'tahun' => '2026',
+        'status' => 'aktif',
+        'status_approval' => 'approved',
+    ]);
+    $sasaran = SasaranKinerja::create([
+        'tahun_anggaran_id' => $tahun->id,
+        'no_urut' => 1,
+        'sasaran_kegiatan' => 'Sasaran Riwayat',
+        'status_approval' => 'approved',
+    ]);
+    $indikator = IndikatorKinerja::create([
+        'sasaran_id' => $sasaran->id,
+        'indikator_kinerja' => 'Indikator Riwayat Pegawai',
+        'target_default' => '1 kegiatan',
+    ]);
+
+    foreach (['pending', 'approved', 'rejected'] as $status) {
+        RealisasiPerkin::create([
+            'user_id' => $pegawai->id,
+            'master_indikator_id' => $indikator->id,
+            'realisasi_capaian' => '100%',
+            'file_eviden' => "evidence/{$status}.pdf",
+            'status_verifikasi' => $status,
+            'catatan_verifikator' => $status === 'rejected' ? 'Mohon unggah dokumen yang lebih jelas.' : null,
+        ]);
+    }
+
+    RealisasiPerkin::create([
+        'user_id' => $pegawaiLain->id,
+        'master_indikator_id' => $indikator->id,
+        'realisasi_capaian' => '50%',
+        'file_eviden' => 'evidence/pegawai-lain.pdf',
+        'status_verifikasi' => 'pending',
+    ]);
+
+    $this->actingAs($pegawai)
+        ->get(route('pegawai.realisasi.index'))
+        ->assertOk()
+        ->assertSee('Riwayat Eviden Saya')
+        ->assertSee('Menunggu ditinjau')
+        ->assertSee('Disetujui')
+        ->assertSee('Perlu revisi')
+        ->assertSee('Indikator Riwayat Pegawai')
+        ->assertSee('Mohon unggah dokumen yang lebih jelas.')
+        ->assertSee('Okt 2026')
+        ->assertSee('history-search')
+        ->assertSee('history-status')
+        ->assertDontSee('pegawai-lain.pdf');
 });
 
 test('admin planning dashboard displays database-backed metrics', function () {

@@ -51,7 +51,7 @@
                                 <td class="whitespace-nowrap px-5 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $tahun->approver?->name ?? '-' }}<p class="text-xs text-gray-400">{{ $tahun->approved_at?->translatedFormat('d M Y') ?? '-' }}</p></td>
                                 <td class="whitespace-nowrap px-5 py-4 text-right">
                                     @if ($tahun->status_approval === 'approved')
-                                        <div class="inline-flex gap-2"><a href="{{ route('perkin.preview', $tahun) }}" target="_blank" class="rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-500/30 dark:text-brand-400">Preview</a><a href="{{ route('admin.laporan-perkin.pdf', $tahun->id) }}" class="rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-600">Download PDF</a></div>
+                                        <div class="inline-flex gap-2"><a href="{{ route('perkin.preview', $tahun) }}" target="_blank" rel="noopener" class="rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50 dark:border-brand-500/30 dark:text-brand-400">Preview</a><a href="{{ route($pdfRouteName, $tahun->id) }}" class="rounded-lg bg-brand-500 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-600">Download PDF</a></div>
                                     @else
                                         <span class="text-xs text-gray-400">Belum dapat dicetak</span>
                                     @endif

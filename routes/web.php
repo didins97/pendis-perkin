@@ -1,17 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\MasterAnggaranController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CetakPerkinController;
-use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\ApprovalMasterController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CetakPerkinController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MasterAnggaranController;
 use App\Http\Controllers\MasterKinerjaController;
+use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PimpinanController;
-use App\Http\Controllers\SekolahController;
 use App\Http\Controllers\RealisasiPerkinController;
+use App\Http\Controllers\SekolahController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // dashboard pages
 Route::get('/', function () {
@@ -44,6 +44,13 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:pimpinan')->group(function () {
         Route::get('/pimpinan/dashboard', [DashboardController::class, 'pimpinanDashboard'])->name('pimpinan.dashboard');
+        Route::get('/pimpinan/laporan-perkin', [CetakPerkinController::class, 'index'])->name('pimpinan.laporan-perkin');
+        Route::get('/pimpinan/laporan-perkin/{id}/pdf', [CetakPerkinController::class, 'cetakPdf'])->name('pimpinan.laporan-perkin.pdf');
+        Route::controller(RealisasiPerkinController::class)->prefix('/pimpinan/realisasi')->name('pimpinan.realisasi.')->group(function () {
+            Route::get('/', 'adminIndex')->name('index');
+            Route::put('/{id}/approve', 'approve')->name('approve');
+            Route::put('/{id}/reject', 'reject')->name('reject');
+        });
         Route::controller(ApprovalMasterController::class)->prefix('/pimpinan/approval-master')->name('pimpinan.approval-master.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{tahun}', 'show')->name('show');
@@ -116,48 +123,6 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// calender pages
-Route::get('/calendar', function () {
-    return view('pages.calender', ['title' => 'Calendar']);
-})->name('calendar');
-
-// profile pages
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
-    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
-});
-
-// form pages
-Route::get('/form-elements', function () {
-    return view('pages.form.form-elements', ['title' => 'Form Elements']);
-})->name('form-elements');
-
-// tables pages
-Route::get('/basic-tables', function () {
-    return view('pages.tables.basic-tables', ['title' => 'Basic Tables']);
-})->name('basic-tables');
-
-// pages
-
-Route::get('/blank', function () {
-    return view('pages.blank', ['title' => 'Blank']);
-})->name('blank');
-
-// error pages
-Route::get('/error-404', function () {
-    return view('pages.errors.error-404', ['title' => 'Error 404']);
-})->name('error-404');
-
-// chart pages
-Route::get('/line-chart', function () {
-    return view('pages.chart.line-chart', ['title' => 'Line Chart']);
-})->name('line-chart');
-
-Route::get('/bar-chart', function () {
-    return view('pages.chart.bar-chart', ['title' => 'Bar Chart']);
-})->name('bar-chart');
-
-
 // authentication pages
 Route::get('/signin', function () {
     return Auth::check()
@@ -179,6 +144,12 @@ Route::middleware('guest')->group(function () {
     Route::get('/signup', [AuthController::class, 'showRegisterForm'])->name('signup');
     Route::get('/register', fn () => redirect()->route('signup'));
     Route::post('/register', [AuthController::class, 'register'])->name('register');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profile/berkas/{document}', [AuthController::class, 'profileDocument'])->name('profile.document');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');

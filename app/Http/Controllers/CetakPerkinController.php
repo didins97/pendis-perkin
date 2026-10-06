@@ -19,6 +19,9 @@ class CetakPerkinController extends Controller
                 ->with('approver')
                 ->latest('tahun')
                 ->get(),
+            'pdfRouteName' => Auth::user()?->role === 'pimpinan'
+                ? 'pimpinan.laporan-perkin.pdf'
+                : 'admin.laporan-perkin.pdf',
         ]);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RealisasiPerkin;
+use App\Models\MasterIndikator;
 use App\Models\Sekolah;
 use App\Models\TahunAnggaran;
 use App\Models\User;
@@ -16,9 +17,37 @@ class DashboardController extends Controller
     {
         $pegawai = Auth::user();
         $tahunPerkin = \App\Models\TahunAnggaran::approved()->latest('tahun')->first();
+        $pegawai->loadMissing(['sekolah', 'profilPegawai']);
+
+        $profileFields = [
+            $pegawai->name,
+            $pegawai->email,
+            $pegawai->nip,
+            $pegawai->nomor_wa,
+            $pegawai->sekolah_id,
+            $pegawai->profilPegawai?->nuptk,
+            $pegawai->profilPegawai?->nrg,
+            $pegawai->profilPegawai?->pangkat_golongan,
+            $pegawai->profilPegawai?->status_kepegawaian,
+            $pegawai->profilPegawai?->jabatan,
+            $pegawai->profilPegawai?->tugas_tambahan,
+            $pegawai->profilPegawai?->berkas_sk_pangkat,
+            $pegawai->profilPegawai?->berkas_sk_mengajar,
+            $pegawai->profilPegawai?->berkas_serdik,
+        ];
+        $profileFieldsCompleted = count(array_filter($profileFields, fn ($value) => filled($value)));
+        $profileCompletion = (int) round($profileFieldsCompleted / count($profileFields) * 100);
 
         return view('pages.dashboard.pegawai-self-service', [
             'pegawai' => $pegawai,
+            'recentEvidence' => $pegawai->realisasins()
+                ->with('indikator.sasaran')
+                ->latest()
+                ->limit(5)
+                ->get(),
+            'profileCompletion' => $profileCompletion,
+            'profileFieldsCompleted' => $profileFieldsCompleted,
+            'profileFieldsTotal' => count($profileFields),
             'tahunPerkin' => $tahunPerkin,
             'indikatorCount' => 4,
             'anggaranDikelola' => 124500000,
@@ -67,23 +96,105 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function pimpinanDashboard(): View
+    public function pimpinanDashboard(Request $request): View
     {
-        $evidenceStats = RealisasiPerkin::query()
-            ->selectRaw('status_verifikasi, COUNT(*) as total')
-            ->groupBy('status_verifikasi')
-            ->pluck('total', 'status_verifikasi');
+        $filters = $request->validate([
+            'sekolah_ids' => ['nullable', 'array'],
+            'sekolah_ids.*' => ['integer', 'distinct', 'exists:sekolahs,id'],
+        ]);
+
+        $selectedSchoolIds = collect($filters['sekolah_ids'] ?? [])->map(fn ($id) => (int) $id)->all();
+        $tahun = TahunAnggaran::approved()->latest('tahun')->first();
+        $indicatorCount = $tahun
+            ? MasterIndikator::query()
+                ->whereHas('sasaran', fn ($query) => $query
+                    ->where('tahun_anggaran_id', $tahun->id)
+                    ->where('status_approval', 'approved'))
+                ->count()
+            : 0;
+
+        $schools = Sekolah::query()
+            ->withCount(['pegawai as active_pegawai_count' => fn ($query) => $query->where('status_aktif', true)])
+            ->orderBy('nama_sekolah')
+            ->get();
+        $activePegawais = User::query()
+            ->where('role', 'pegawai')
+            ->where('status_aktif', true)
+            ->with('sekolah:id,nama_sekolah')
+            ->get(['id', 'name', 'email', 'nip', 'sekolah_id']);
+        $uploadedIndicators = $tahun && $activePegawais->isNotEmpty()
+            ? RealisasiPerkin::query()
+                ->select('user_id')
+                ->selectRaw('COUNT(DISTINCT master_indikator_id) as submitted_count')
+                ->whereIn('user_id', $activePegawais->modelKeys())
+                ->whereHas('indikator.sasaran', fn ($query) => $query
+                    ->where('tahun_anggaran_id', $tahun->id)
+                    ->where('status_approval', 'approved'))
+                ->groupBy('user_id')
+                ->pluck('submitted_count', 'user_id')
+            : collect();
+
+        $completionByPegawai = $activePegawais->mapWithKeys(function (User $pegawai) use ($uploadedIndicators, $indicatorCount) {
+            $submittedCount = min((int) $uploadedIndicators->get($pegawai->id, 0), $indicatorCount);
+            $percentage = $indicatorCount > 0 ? $submittedCount / $indicatorCount * 100 : 0;
+
+            return [$pegawai->id => [
+                'sekolah_id' => $pegawai->sekolah_id,
+                'submitted_count' => $submittedCount,
+                'percentage' => $percentage,
+            ]];
+        });
+
+        $employeeCount = $activePegawais->count();
+        $submittedSlots = $completionByPegawai->sum('submitted_count');
+        $possibleSlots = $employeeCount * $indicatorCount;
+        $overallCompletion = $possibleSlots > 0 ? (int) round($submittedSlots / $possibleSlots * 100) : 0;
+
+        $complianceDistribution = [
+            'complete' => $completionByPegawai->where('percentage', 100)->count(),
+            'progress' => $completionByPegawai->filter(fn ($pegawai) => $pegawai['percentage'] >= 30 && $pegawai['percentage'] <= 70)->count(),
+            'not_started' => $indicatorCount > 0 ? $completionByPegawai->where('submitted_count', 0)->count() : 0,
+            'other_progress' => $completionByPegawai->filter(fn ($pegawai) => $pegawai['percentage'] > 0
+                && $pegawai['percentage'] < 100
+                && ($pegawai['percentage'] < 30 || $pegawai['percentage'] > 70))->count(),
+        ];
+        $redZonePegawais = $indicatorCount > 0
+            ? $activePegawais
+                ->filter(fn (User $pegawai) => $completionByPegawai->get($pegawai->id)['submitted_count'] === 0)
+                ->sortBy('name')
+                ->values()
+            : collect();
+
+        $schoolCompliance = $schools
+            ->filter(fn ($school) => empty($selectedSchoolIds) || in_array($school->id, $selectedSchoolIds, true))
+            ->map(function (Sekolah $school) use ($completionByPegawai, $indicatorCount) {
+                $schoolPegawais = $completionByPegawai->filter(fn ($pegawai) => $pegawai['sekolah_id'] === $school->id);
+                $schoolPossibleSlots = $schoolPegawais->count() * $indicatorCount;
+                $schoolSubmittedSlots = $schoolPegawais->sum('submitted_count');
+
+                return [
+                    'id' => $school->id,
+                    'school' => $school->nama_sekolah,
+                    'value' => $schoolPossibleSlots > 0
+                        ? round($schoolSubmittedSlots / $schoolPossibleSlots * 100, 1)
+                        : 0,
+                    'employees' => $schoolPegawais->count(),
+                ];
+            })
+            ->values();
 
         return view('pages.dashboard.pimpinan', [
-            'totalEvidence' => $evidenceStats->sum(),
-            'pendingEvidence' => $evidenceStats->get('pending', 0),
-            'approvedEvidence' => $evidenceStats->get('approved', 0),
-            'revisionEvidence' => $evidenceStats->get('rejected', 0),
-            'recentEvidence' => RealisasiPerkin::query()
-                ->with(['user.sekolah', 'indikator.sasaran'])
-                ->latest()
-                ->limit(10)
-                ->get(),
+            'activePegawaiCount' => $employeeCount,
+            'overallCompletion' => $overallCompletion,
+            'schoolCount' => $schools->count(),
+            'redZoneCount' => $redZonePegawais->count(),
+            'redZonePegawais' => $redZonePegawais,
+            'complianceDistribution' => $complianceDistribution,
+            'schoolCompliance' => $schoolCompliance,
+            'schools' => $schools,
+            'selectedSchoolIds' => $selectedSchoolIds,
+            'tahun' => $tahun,
+            'indicatorCount' => $indicatorCount,
         ]);
     }
 

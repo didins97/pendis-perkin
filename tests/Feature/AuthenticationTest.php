@@ -1,9 +1,11 @@
 <?php
 
-use App\Models\User;
 use App\Models\Sekolah;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -72,4 +74,38 @@ test('authenticated user can log out', function () {
         ->assertRedirect(route('signin'));
 
     expect(auth()->check())->toBeFalse();
+});
+
+test('authenticated user can view and update their profile', function () {
+    Storage::fake('local');
+
+    $user = User::factory()->create(['role' => 'pegawai']);
+
+    $this->actingAs($user)
+        ->get(route('profile'))
+        ->assertOk();
+
+    $this->put(route('profile.update'), [
+        'name' => 'Nama Baru',
+        'email' => $user->email,
+        'nip' => '198001012005011001',
+        'nomor_wa' => '081234567890',
+        'nuptk' => '1234567890123456',
+        'nrg' => '998877',
+        'pangkat_golongan' => 'III/a',
+        'status_kepegawaian' => 'PPPK',
+        'jabatan' => 'Pegawai',
+        'tugas_tambahan' => 'Wali Kelas',
+        'berkas_sk_mengajar' => UploadedFile::fake()->create('sk-mengajar.pdf', 20, 'application/pdf'),
+    ])->assertRedirect(route('profile'));
+
+    expect($user->fresh()->name)->toBe('Nama Baru')
+        ->and($user->fresh()->nip)->toBe('198001012005011001')
+        ->and($user->fresh()->nomor_wa)->toBe('081234567890')
+        ->and($user->fresh()->profilPegawai->status_kepegawaian)->toBe('PPPK')
+        ->and($user->fresh()->profilPegawai->pangkat_golongan)->toBe('III/a');
+
+    Storage::disk('local')->assertExists($user->fresh()->profilPegawai->berkas_sk_mengajar);
+
+    $this->get(route('profile.document', 'sk-mengajar'))->assertOk();
 });

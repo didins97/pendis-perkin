@@ -25,6 +25,11 @@ class RealisasiPerkinController extends Controller
 
         return view('pages.pegawai.realisasi-index', [
             'items' => $items,
+            'statusCounts' => [
+                'pending' => $items->where('status_verifikasi', 'pending')->count(),
+                'approved' => $items->where('status_verifikasi', 'approved')->count(),
+                'rejected' => $items->where('status_verifikasi', 'rejected')->count(),
+            ],
         ]);
     }
 
@@ -62,7 +67,7 @@ class RealisasiPerkinController extends Controller
                 'indikator_kinerja' => $indikator->indikator_kinerja,
                 'kode_sub' => $indikator->kode_sub,
                 'satuan' => $indikator->satuan,
-                'label' => $indikator->kode_sub ? 'Indikator ' . $indikator->kode_sub . ' - ' . $indikator->indikator_kinerja : $indikator->indikator_kinerja,
+                'label' => $indikator->kode_sub ? 'Indikator '.$indikator->kode_sub.' - '.$indikator->indikator_kinerja : $indikator->indikator_kinerja,
             ];
         }));
     }
@@ -102,6 +107,11 @@ class RealisasiPerkinController extends Controller
 
         return view('pages.admin.realisasi-index', [
             'items' => $items,
+            'statusCounts' => [
+                'pending' => $items->where('status_verifikasi', 'pending')->count(),
+                'approved' => $items->where('status_verifikasi', 'approved')->count(),
+                'rejected' => $items->where('status_verifikasi', 'rejected')->count(),
+            ],
         ]);
     }
 
@@ -116,7 +126,7 @@ class RealisasiPerkinController extends Controller
             'catatan_verifikator' => 'Eviden telah diterima dan diverifikasi oleh Admin Kemenag.',
         ]);
 
-        return redirect()->route('admin.realisasi.index')->with('success', 'Eviden berhasil diverifikasi.');
+        return redirect()->route($this->verificationIndexRoute())->with('success', 'Eviden berhasil diverifikasi.');
     }
 
     public function reject(Request $request, int $id): RedirectResponse
@@ -134,6 +144,13 @@ class RealisasiPerkinController extends Controller
             'catatan_verifikator' => $data['catatan_verifikator'],
         ]);
 
-        return redirect()->route('admin.realisasi.index')->with('success', 'Eviden dikembalikan untuk revisi.');
+        return redirect()->route($this->verificationIndexRoute())->with('success', 'Eviden dikembalikan untuk revisi.');
+    }
+
+    private function verificationIndexRoute(): string
+    {
+        return Auth::user()?->role === 'pimpinan'
+            ? 'pimpinan.realisasi.index'
+            : 'admin.realisasi.index';
     }
 }
