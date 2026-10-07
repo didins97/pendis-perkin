@@ -61,6 +61,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+        Route::get('/admin/monitoring-progres', [DashboardController::class, 'adminMonitoringProgres'])->name('admin.monitoring-progres');
+        Route::get('/admin/master-data/tahun-anggaran', [MasterKinerjaController::class, 'indexTahun'])->name('admin.tahun-anggaran.index');
         Route::get('/admin/laporan-perkin', [CetakPerkinController::class, 'index'])->name('admin.laporan-perkin');
         Route::get('/admin/laporan-perkin/{id}/pdf', [CetakPerkinController::class, 'cetakPdf'])->name('admin.laporan-perkin.pdf');
 

@@ -12,13 +12,18 @@ class MasterSasaranIndikatorSeeder extends Seeder
 {
     public function run(): void
     {
-        $tahun = TahunAnggaran::updateOrCreate(
-            ['tahun' => '2026'],
-            ['status' => 'aktif']
-        );
-
         $adminId = User::where('role', 'admin')->value('id');
         $pimpinanId = User::where('role', 'pimpinan')->value('id');
+
+        $tahun = TahunAnggaran::updateOrCreate(
+            ['tahun' => '2026'],
+            [
+                'status' => 'aktif',
+                'status_approval' => 'approved',
+                'approved_by' => $pimpinanId,
+                'approved_at' => now(),
+            ]
+        );
 
         $data = [
             [1, 'Meningkatnya kualitas perencanaan dan anggaran', [

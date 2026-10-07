@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RealisasiPerkin;
 use App\Models\MasterIndikator;
+use App\Models\RealisasiPerkin;
 use App\Models\Sekolah;
 use App\Models\TahunAnggaran;
 use App\Models\User;
@@ -16,7 +16,7 @@ class DashboardController extends Controller
     public function pegawaiDashboard(): View
     {
         $pegawai = Auth::user();
-        $tahunPerkin = \App\Models\TahunAnggaran::approved()->latest('tahun')->first();
+        $tahunPerkin = TahunAnggaran::approved()->latest('tahun')->first();
         $pegawai->loadMissing(['sekolah', 'profilPegawai']);
 
         $profileFields = [
@@ -198,122 +198,167 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function adminDashboard(Request $request): View
+    public function adminDashboard(): View
     {
-        $filters = $request->validate([
-            'tahun_anggaran_id' => ['nullable', 'integer', 'exists:tahun_anggarans,id'],
-            'sekolah_id' => ['nullable', 'integer', 'exists:sekolahs,id'],
-        ]);
+        $tahun = TahunAnggaran::approved()->latest('tahun')->first();
 
-        $tahuns = TahunAnggaran::query()->orderByDesc('tahun')->get();
-        $tahun = isset($filters['tahun_anggaran_id'])
-            ? $tahuns->firstWhere('id', $filters['tahun_anggaran_id'])
-            : TahunAnggaran::approved()->latest('tahun')->first();
-        $sekolahs = Sekolah::query()->orderBy('nama_sekolah')->get();
-        $sekolahId = $filters['sekolah_id'] ?? null;
+        $activePegawais = User::query()
+            ->where('role', 'pegawai')
+            ->where('status_aktif', true)
+            ->with('sekolah:id,nama_sekolah')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'nip', 'nomor_wa', 'sekolah_id']);
 
-        $programs = $tahun
-            ? $tahun->masterPrograms()
-                ->withSum('kegiatans', 'anggaran')
-                ->withCount('kegiatans')
-                ->orderBy('nama_program')
+        $indikators = $tahun && $tahun->status_approval === 'approved'
+            ? MasterIndikator::query()
+                ->with('sasaran:id,no_urut,sasaran_kegiatan')
+                ->whereHas('sasaran', fn ($query) => $query
+                    ->where('tahun_anggaran_id', $tahun->id)
+                    ->where('status_approval', 'approved'))
+                ->orderBy('sasaran_id')
+                ->orderBy('kode_sub')
+                ->orderBy('id')
                 ->get()
-                ->map(fn ($program) => [
-                    'name' => $program->nama_program,
-                    'anggaran' => (float) ($program->kegiatans_sum_anggaran ?? 0),
-                ])
             : collect();
 
-        $pegawaiQuery = User::query()->where('role', 'pegawai')->when(
-            $sekolahId,
-            fn ($query) => $query->where('sekolah_id', $sekolahId)
-        );
-        $pegawaiCount = (clone $pegawaiQuery)->count();
+        $indicatorIds = $indikators->pluck('id')->all();
+        $pegawaiIds = $activePegawais->modelKeys();
+        $indicatorUploads = $indicatorIds && $pegawaiIds
+            ? RealisasiPerkin::query()
+                ->select('master_indikator_id')
+                ->selectRaw('COUNT(DISTINCT user_id) as submitted_count')
+                ->whereIn('master_indikator_id', $indicatorIds)
+                ->whereIn('user_id', $pegawaiIds)
+                ->groupBy('master_indikator_id')
+                ->pluck('submitted_count', 'master_indikator_id')
+            : collect();
+        $pegawaiUploads = $indicatorIds && $pegawaiIds
+            ? RealisasiPerkin::query()
+                ->select('user_id')
+                ->selectRaw('COUNT(DISTINCT master_indikator_id) as submitted_count')
+                ->whereIn('master_indikator_id', $indicatorIds)
+                ->whereIn('user_id', $pegawaiIds)
+                ->groupBy('user_id')
+                ->pluck('submitted_count', 'user_id')
+            : collect();
 
-        $realisasiQuery = RealisasiPerkin::query()
-            ->when(
-                $tahun,
-                fn ($query) => $query->whereHas(
-                    'indikator.sasaran',
-                    fn ($sasaranQuery) => $sasaranQuery->where('tahun_anggaran_id', $tahun->id)
-                ),
-                fn ($query) => $query->whereRaw('1 = 0')
-            )
-            ->whereHas('user', fn ($query) => $query->where('role', 'pegawai')->when(
-                $sekolahId,
-                fn ($userQuery) => $userQuery->where('sekolah_id', $sekolahId)
-            ));
+        $indicatorCount = $indikators->count();
+        $pegawaiCount = $activePegawais->count();
+        $totalQuota = $pegawaiCount * $indicatorCount;
+        $completedSlots = (int) $indicatorUploads->sum();
+        $completionPercentage = $totalQuota > 0
+            ? ($completedSlots === $totalQuota
+                ? 100
+                : min(99, (int) round($completedSlots / $totalQuota * 100)))
+            : 0;
 
-        $submittedPegawaiCount = (clone $realisasiQuery)->distinct()->count('user_id');
-        $evidenceCount = (clone $realisasiQuery)->count();
-        $approvedEvidenceCount = (clone $realisasiQuery)->where('status_verifikasi', 'approved')->count();
-        $revisionEvidenceCount = (clone $realisasiQuery)->where('status_verifikasi', 'rejected')->count();
-        $pendingEvidenceCount = (clone $realisasiQuery)->where('status_verifikasi', 'pending')->count();
-        $totalBudget = $programs->sum('anggaran');
-        $activityCount = $tahun ? $tahun->masterPrograms()->withCount('kegiatans')->get()->sum('kegiatans_count') : 0;
-        $budgetLabel = $totalBudget >= 1_000_000_000
-            ? 'Rp ' . number_format($totalBudget / 1_000_000_000, 2, ',', '.') . ' M'
-            : 'Rp ' . number_format($totalBudget / 1_000_000, 2, ',', '.') . ' jt';
-
-        $schoolCompliance = Sekolah::query()
-            ->when($sekolahId, fn ($query) => $query->whereKey($sekolahId))
-            ->withCount('pegawai')
-            ->withCount(['pegawai as submitted_pegawai_count' => fn ($query) => $query->when(
-                $tahun,
-                fn ($pegawaiQuery) => $pegawaiQuery->whereHas(
-                    'realisasins.indikator.sasaran',
-                    fn ($sasaranQuery) => $sasaranQuery->where('tahun_anggaran_id', $tahun->id)
-                ),
-                fn ($pegawaiQuery) => $pegawaiQuery->whereRaw('1 = 0')
-            )])
-            ->orderBy('nama_sekolah')
-            ->get()
-            ->map(fn ($sekolah) => [
-                'school' => $sekolah->nama_sekolah,
-                'value' => $sekolah->pegawai_count > 0
-                    ? round($sekolah->submitted_pegawai_count / $sekolah->pegawai_count * 100)
-                    : 0,
-            ]);
-
-        $metrics = [
-            [
-                'label' => 'Total Pagu Anggaran',
-                'value' => $budgetLabel,
-                'sub' => $programs->count() . ' Program · ' . $activityCount . ' Kegiatan',
-                'icon' => 'wallet',
-                'tone' => 'brand',
-            ],
-            [
-                'label' => 'Progres Submit Perkin Pegawai',
-                'value' => $submittedPegawaiCount . ' / ' . $pegawaiCount,
-                'sub' => ($pegawaiCount > 0 ? round($submittedPegawaiCount / $pegawaiCount * 100) : 0) . '% sudah submit',
-                'icon' => 'users',
-                'tone' => 'success',
-            ],
-            [
-                'label' => 'Status Approval Master Perkin',
-                'value' => $tahun ? ucfirst($tahun->status_approval ?? 'draft') : 'Belum ada data',
-                'sub' => $tahun ? 'Tahun ' . $tahun->tahun : 'Tahun anggaran belum tersedia',
-                'icon' => 'shield',
-                'tone' => 'warning',
-            ],
-            [
-                'label' => 'Kepatuhan Eviden',
-                'value' => $approvedEvidenceCount . ' / ' . $evidenceCount,
-                'sub' => $revisionEvidenceCount . ' Butuh Revisi · ' . $pendingEvidenceCount . ' Menunggu',
-                'icon' => 'check',
-                'tone' => 'purple',
-            ],
-        ];
+        $redZonePegawais = $indicatorCount > 0
+            ? $activePegawais
+                ->filter(fn (User $pegawai) => (int) $pegawaiUploads->get($pegawai->id, 0) === 0)
+                ->values()
+            : collect();
+        $connectedSchoolCount = Sekolah::query()
+            ->whereHas('pegawai', fn ($query) => $query->where('status_aktif', true))
+            ->count();
 
         return view('pages.dashboard.perencanaan-admin', compact(
-            'tahuns',
             'tahun',
-            'sekolahs',
-            'sekolahId',
-            'programs',
-            'schoolCompliance',
-            'metrics',
+            'pegawaiCount',
+            'totalQuota',
+            'completedSlots',
+            'completionPercentage',
+            'connectedSchoolCount',
+            'redZonePegawais',
+            'indicatorCount',
         ));
+    }
+
+    public function adminMonitoringProgres(Request $request): View
+    {
+        $filters = $request->validate([
+            'sekolah_id' => ['nullable', 'integer', 'exists:sekolahs,id'],
+            'status' => ['nullable', 'in:all,complete,progress,critical'],
+        ]);
+
+        $sekolahId = $filters['sekolah_id'] ?? null;
+        $statusFilter = $filters['status'] ?? 'all';
+        $tahun = TahunAnggaran::approved()->latest('tahun')->first();
+        $sekolahs = Sekolah::query()->orderBy('nama_sekolah')->get();
+        $pegawai = User::query()
+            ->where('role', 'pegawai')
+            ->where('status_aktif', true)
+            ->when($sekolahId, fn ($query) => $query->where('sekolah_id', $sekolahId))
+            ->with('sekolah:id,nama_sekolah')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email', 'nip', 'sekolah_id']);
+        $indikators = $tahun
+            ? MasterIndikator::query()
+                ->with('sasaran:id,no_urut,sasaran_kegiatan')
+                ->whereHas('sasaran', fn ($query) => $query
+                    ->where('tahun_anggaran_id', $tahun->id)
+                    ->where('status_approval', 'approved'))
+                ->orderBy('sasaran_id')
+                ->orderBy('kode_sub')
+                ->orderBy('id')
+                ->get()
+            : collect();
+
+        $indicatorIds = $indikators->pluck('id')->all();
+        $pegawaiIds = $pegawai->modelKeys();
+        $uploadsByIndicator = $indicatorIds && $pegawaiIds
+            ? RealisasiPerkin::query()
+                ->whereIn('master_indikator_id', $indicatorIds)
+                ->whereIn('user_id', $pegawaiIds)
+                ->get(['master_indikator_id', 'user_id'])
+                ->groupBy('master_indikator_id')
+                ->map(fn ($uploads) => $uploads->pluck('user_id')->unique()->map(fn ($id) => (int) $id)->values())
+            : collect();
+
+        $indicatorGroups = $indikators
+            ->map(function (MasterIndikator $indikator) use ($pegawai, $uploadsByIndicator) {
+                $uploadedIds = $uploadsByIndicator->get($indikator->id, collect());
+                $uploadedPegawai = $pegawai->whereIn('id', $uploadedIds)->values();
+                $missingPegawai = $pegawai->whereNotIn('id', $uploadedIds)->values();
+                $percentage = $pegawai->isNotEmpty()
+                    ? ($uploadedPegawai->count() === $pegawai->count()
+                        ? 100
+                        : min(99, (int) round($uploadedPegawai->count() / $pegawai->count() * 100)))
+                    : 0;
+
+                return [
+                    'id' => $indikator->id,
+                    'sasaran_id' => $indikator->sasaran_id,
+                    'no_urut' => $indikator->sasaran->no_urut,
+                    'sasaran' => $indikator->sasaran->sasaran_kegiatan,
+                    'name' => $indikator->indikator_kinerja,
+                    'percentage' => $percentage,
+                    'uploaded_count' => $uploadedPegawai->count(),
+                    'pegawai_count' => $pegawai->count(),
+                    'uploaded_pegawai' => $uploadedPegawai,
+                    'missing_pegawai' => $missingPegawai,
+                ];
+            })
+            ->when($statusFilter !== 'all', fn ($items) => $items->filter(fn ($item) => match ($statusFilter) {
+                'complete' => $item['percentage'] === 100,
+                'progress' => $item['percentage'] > 0 && $item['percentage'] < 100,
+                'critical' => $pegawai->isNotEmpty() && $item['percentage'] === 0,
+            }))
+            ->groupBy('sasaran_id')
+            ->map(fn ($items) => [
+                'no_urut' => $items->first()['no_urut'],
+                'sasaran' => $items->first()['sasaran'],
+                'indikators' => $items->values(),
+            ])
+            ->values();
+
+        return view('pages.admin.monitoring-progres-indikator', [
+            'tahun' => $tahun,
+            'sekolahs' => $sekolahs,
+            'sekolahId' => $sekolahId,
+            'statusFilter' => $statusFilter,
+            'pegawaiCount' => $pegawai->count(),
+            'indicatorGroups' => $indicatorGroups,
+            'indicatorCount' => $indikators->count(),
+        ]);
     }
 }

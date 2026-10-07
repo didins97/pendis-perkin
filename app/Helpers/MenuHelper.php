@@ -14,35 +14,32 @@ class MenuHelper
 
         return match ($role) {
             'pimpinan' => [
-                ['icon' => 'dashboard', 'name' => 'Executive Dashboard', 'path' => '/pimpinan/dashboard'],
-                ['icon' => 'forms', 'name' => 'Approval Master Perkin & Pagu', 'path' => '/pimpinan/approval-master'],
-                ['icon' => 'task', 'name' => 'Realisasi & Verifikasi Eviden Pegawai', 'path' => '/pimpinan/realisasi'],
-                ['icon' => 'pages', 'name' => 'Laporan & Cetak Perkin', 'path' => '/pimpinan/laporan-perkin'],
+                ['icon' => 'layout-dashboard', 'name' => 'Executive Dashboard', 'path' => '/pimpinan/dashboard'],
+                ['icon' => 'badge-check', 'name' => 'Persetujuan (Approval) Perkin', 'path' => '/pimpinan/approval-master'],
+                ['icon' => 'file-text', 'name' => 'Laporan & Capaian Kinerja', 'path' => '/pimpinan/laporan-perkin'],
             ],
             'admin' => [
-                ['icon' => 'dashboard', 'name' => 'Dashboard', 'path' => '/admin/dashboard'],
+                ['icon' => 'layout-dashboard', 'name' => 'Dashboard', 'path' => '/admin/dashboard'],
+                ['icon' => 'chart-bars', 'name' => 'Monitoring Progres', 'path' => '/admin/monitoring-progres'],
+                ['icon' => 'file-check', 'name' => 'Verifikasi Eviden Pegawai', 'path' => '/admin/realisasi'],
+                ['icon' => 'printer', 'name' => 'Laporan & Cetak Perkin', 'path' => '/admin/laporan-perkin'],
+                ['icon' => 'target', 'name' => 'Master Perkin & Indikator', 'path' => '/admin/master-data/kinerja'],
                 [
-                    'icon' => 'forms',
-                    'name' => 'Master Data Kinerja',
-                    'path' => '/admin/master-data/kinerja',
-                ],
-                ['icon' => 'task', 'name' => 'Realisasi & Verifikasi Eviden Pegawai', 'path' => '/admin/realisasi'],
-                [
-                    'icon' => 'user-profile',
+                    'icon' => 'database',
                     'name' => 'Data Master',
                     'subItems' => [
                         ['name' => 'Data Pegawai', 'path' => '/admin/master-data/pegawai'],
-                        ['name' => 'Data Sekolah', 'path' => '/admin/master-data/sekolah'],
+                        ['name' => 'Data Sekolah / Satker', 'path' => '/admin/master-data/sekolah'],
+                        ['name' => 'Tahun Anggaran', 'path' => '/admin/master-data/tahun-anggaran'],
                         ['name' => 'Data Pimpinan', 'path' => '/admin/master-data/pimpinan'],
                     ],
                 ],
-                ['icon' => 'pages', 'name' => 'Laporan & Cetak Perkin', 'path' => '/admin/laporan-perkin'],
             ],
             default => [
-                ['icon' => 'dashboard', 'name' => 'Dashboard Pegawai', 'path' => '/pegawai/dashboard'],
-                ['icon' => 'forms', 'name' => 'Upload / Input Eviden', 'path' => '/pegawai/realisasi/create'],
-                ['icon' => 'charts', 'name' => 'Riwayat Realisasi Saya', 'path' => '/pegawai/realisasi'],
-                ['icon' => 'pages', 'name' => 'Lihat Perkin Resmi', 'path' => $tahunPerkin ? route('perkin.preview', $tahunPerkin) : '/perkin'],
+                ['icon' => 'layout-dashboard', 'name' => 'Dashboard Saya', 'path' => '/pegawai/dashboard'],
+                ['icon' => 'upload-cloud', 'name' => 'Pengisian Eviden Kinerja', 'path' => '/pegawai/realisasi/create'],
+                ['icon' => 'history', 'name' => 'Riwayat & Status Verifikasi', 'path' => '/pegawai/realisasi'],
+                ['icon' => 'printer', 'name' => 'Cetak & Dokumen Perkin', 'path' => $tahunPerkin ? route('perkin.preview', $tahunPerkin) : '/perkin'],
             ],
         };
     }
@@ -55,7 +52,7 @@ class MenuHelper
                 'name' => 'Charts',
                 'subItems' => [
                     ['name' => 'Line Chart', 'path' => '/line-chart', 'pro' => false],
-                    ['name' => 'Bar Chart', 'path' => '/bar-chart', 'pro' => false]
+                    ['name' => 'Bar Chart', 'path' => '/bar-chart', 'pro' => false],
                 ],
             ],
             [
@@ -85,20 +82,86 @@ class MenuHelper
     {
         $role = Auth::user()?->role ?? 'pegawai';
 
+        if ($role === 'admin') {
+            return [
+                [
+                    'title' => 'Menu Admin / Perencana',
+                    'items' => [
+                        ['icon' => 'layout-dashboard', 'name' => 'Dashboard', 'path' => '/admin/dashboard'],
+                    ],
+                ],
+                [
+                    'title' => 'Utama & Operasional',
+                    'items' => [
+                        ['icon' => 'chart-bars', 'name' => 'Monitoring Progres', 'path' => '/admin/monitoring-progres'],
+                        ['icon' => 'file-check', 'name' => 'Verifikasi Eviden Pegawai', 'path' => '/admin/realisasi'],
+                        ['icon' => 'printer', 'name' => 'Laporan & Cetak Perkin', 'path' => '/admin/laporan-perkin'],
+                    ],
+                ],
+                [
+                    'title' => 'Pengaturan Kinerja',
+                    'items' => [
+                        ['icon' => 'target', 'name' => 'Master Perkin & Indikator', 'path' => '/admin/master-data/kinerja'],
+                    ],
+                ],
+                [
+                    'title' => 'Kelola Data',
+                    'items' => [
+                        [
+                            'icon' => 'database',
+                            'name' => 'Data Master',
+                            'subItems' => [
+                                ['name' => 'Data Pegawai', 'path' => '/admin/master-data/pegawai'],
+                                ['name' => 'Data Sekolah / Satker', 'path' => '/admin/master-data/sekolah'],
+                                ['name' => 'Tahun Anggaran', 'path' => '/admin/master-data/tahun-anggaran'],
+                                ['name' => 'Data Pimpinan', 'path' => '/admin/master-data/pimpinan'],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        if ($role === 'pimpinan') {
+            return [
+                [
+                    'title' => 'Menu Pimpinan',
+                    'items' => [
+                        ['icon' => 'layout-dashboard', 'name' => 'Dashboard', 'path' => '/pimpinan/dashboard'],
+                    ],
+                ],
+                [
+                    'title' => 'Persetujuan & Pengawasan',
+                    'items' => [
+                        ['icon' => 'badge-check', 'name' => 'Persetujuan (Approval) Perkin', 'path' => '/pimpinan/approval-master'],
+                        ['icon' => 'file-text', 'name' => 'Laporan & Capaian Kinerja', 'path' => '/pimpinan/laporan-perkin'],
+                    ],
+                ],
+            ];
+        }
+
         return [
             [
-                'title' => match ($role) {
-                    'pimpinan' => 'Menu Pimpinan',
-                    'admin' => 'Menu Admin / Perencana',
-                    default => 'Menu Pegawai',
-                },
-                'items' => self::getMainNavItems()
+                'title' => 'Menu Pegawai',
+                'items' => [
+                    ['icon' => 'layout-dashboard', 'name' => 'Dashboard Saya', 'path' => '/pegawai/dashboard'],
+                ],
             ],
-            // [
-            //     'title' => 'Lainnya',
-            //     'items' => self::getOthersItems()
-            // ]
+            [
+                'title' => 'Kinerja & Eviden',
+                'items' => [
+                    ['icon' => 'upload-cloud', 'name' => 'Pengisian Eviden Kinerja', 'path' => '/pegawai/realisasi/create'],
+                    ['icon' => 'history', 'name' => 'Riwayat & Status Verifikasi', 'path' => '/pegawai/realisasi'],
+                ],
+            ],
+            [
+                'title' => 'Dokumen',
+                'items' => [
+                    ['icon' => 'printer', 'name' => 'Cetak & Dokumen Perkin', 'path' => self::getMainNavItems()[3]['path']],
+                ],
+            ],
         ];
+
     }
 
     public static function isActive($path)
@@ -140,6 +203,19 @@ class MenuHelper
             'email' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 8.187V17.25C3.5 17.6642 3.83579 18 4.25 18H19.75C20.1642 18 20.5 17.6642 20.5 17.25V8.18747L13.2873 13.2171C12.5141 13.7563 11.4866 13.7563 10.7134 13.2171L3.5 8.187ZM20.5 6.2286C20.5 6.23039 20.5 6.23218 20.5 6.23398V6.24336C20.4976 6.31753 20.4604 6.38643 20.3992 6.42905L12.4293 11.9867C12.1716 12.1664 11.8291 12.1664 11.5713 11.9867L3.60116 6.42885C3.538 6.38481 3.50035 6.31268 3.50032 6.23568C3.50028 6.10553 3.60577 6 3.73592 6H20.2644C20.3922 6 20.4963 6.10171 20.5 6.2286ZM22 6.25648V17.25C22 18.4926 20.9926 19.5 19.75 19.5H4.25C3.00736 19.5 2 18.4926 2 17.25V6.23398C2 6.22371 2.00021 6.2135 2.00061 6.20333C2.01781 5.25971 2.78812 4.5 3.73592 4.5H20.2644C21.2229 4.5 22 5.27697 22.0001 6.23549C22.0001 6.24249 22.0001 6.24949 22 6.25648Z" fill="currentColor"></path></svg>',
         ];
 
-        return $icons[$iconName] ?? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/></svg>';
+        $adminIcons = [
+            'layout-dashboard' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+            'upload-cloud' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M20 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 16.3"/><path d="M8 16h8a3 3 0 0 1 0 6H8a3 3 0 0 1 0-6Z"/></svg>',
+            'history' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
+            'chart-bars' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>',
+            'badge-check' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M12 3 14.2 4.2l2.5-.1 1.1 2.2 2.1 1.3-.4 2.5 1 2.3-1.7 1.9-.4 2.5-2.4.7-1.7 1.8-2.4-.8-2.4.8-1.7-1.8-2.4-.7-.4-2.5-1.7-1.9 1-2.3-.4-2.5 2.1-1.3 1.1-2.2 2.5.1L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>',
+            'file-text' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8"/></svg>',
+            'file-check' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg>',
+            'printer' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/><path d="M18 12h.01"/></svg>',
+            'target' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+            'database' => '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>',
+        ];
+
+        return $icons[$iconName] ?? $adminIcons[$iconName] ?? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/></svg>';
     }
 }

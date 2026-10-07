@@ -133,7 +133,7 @@
                                 <td class="px-5 py-4 whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-1.5">
                                         <!-- Edit -->
-                                        <a href="{{ route('admin.pegawai.edit', $pegawai) }}" title="Edit pegawai" aria-label="Edit pegawai"
+                                        <a href="{{ route('admin.pegawai.show', $pegawai) }}" title="Edit pegawai" aria-label="Edit pegawai"
                                             class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/10 transition">
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.5-9.5a2.121 2.121 0 013 3L12 14l-4 1 1-4 7.5-7.5z" />

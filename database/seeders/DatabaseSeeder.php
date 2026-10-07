@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             SekolahAndUserSeeder::class,
             MasterSasaranIndikatorSeeder::class,
             MasterAnggaranSeeder::class,
+            RealisasiPerkinSeeder::class,
         ]);
     }
 }

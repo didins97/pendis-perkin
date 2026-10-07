@@ -23,6 +23,23 @@ test('pimpinan users are sent to their dashboard from the root route', function 
         ->assertSee('Belum ada eviden Perkin.');
 });
 
+test('pimpinan sidebar groups dashboard, approval, and reporting navigation', function () {
+    $pimpinan = User::factory()->create(['role' => 'pimpinan']);
+
+    $this->actingAs($pimpinan)
+        ->get(route('pimpinan.dashboard'))
+        ->assertOk()
+        ->assertSee('Menu Pimpinan')
+        ->assertSee('Persetujuan &amp; Pengawasan', false)
+        ->assertSee('Executive Dashboard')
+        ->assertSee('Persetujuan (Approval) Perkin')
+        ->assertSee('Laporan &amp; Capaian Kinerja', false)
+        ->assertDontSee('Realisasi &amp; Verifikasi Eviden Pegawai', false)
+        ->assertSee('/pimpinan/dashboard')
+        ->assertSee('/pimpinan/approval-master')
+        ->assertSee('/pimpinan/laporan-perkin');
+});
+
 test('pimpinan can access the same perkin report and print options as admin', function () {
     $pimpinan = User::factory()->create(['role' => 'pimpinan']);
     $admin = User::factory()->create(['role' => 'admin']);
